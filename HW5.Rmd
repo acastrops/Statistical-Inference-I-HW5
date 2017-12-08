@@ -183,6 +183,31 @@ hist(eps)
 var(eps)
 mean(eps)
 
+
+# Start of Lilly's answer
+
+library('mosaic')
+library('Hmisc')
+
+shape = 2
+mu = 4
+sigma = 1
+scale = mu / shape
+
+ind_poisson <- CIsim(n=20, samples=100, rdist=rbinom, args=list(size=1, prob=.7), estimand = .7, method = t.test, method.args=list(ci = "Plus4"))
+
+ind_gamma <- CIsim(n = 20, samples=100, rdist = rgamma,
+args = list(shape = shape, scale = scale),
+method = t.test,
+verbose = FALSE, estimand = mu)
+head(ind_gamma)
+
+histogram(~estimate, data = ind_gamma)
+
+histogram(~estimate, data = ind_poisson)
+
+xYplot(Cbind(estimate, lower, upper) ~ sample, data = ind_gamma, par.settings = col.mosaic(), groups = cover)
+
 ```
 
 \newpage
@@ -259,13 +284,7 @@ y <- b0 + b1 * x + eps
         
 5. Multicollinearity
     a.	Simulate predictors that are correlated with a variety of different correlation structures.
-```{r 5a}
-#bla
-```
     b.	Try simulations with a small sample size (e.g. 20), a medium sample size (e.g. n= 100), and a large sample size (e.g. n = 5000). 
-```{r 5b}
-#bla
-```
     c.	For each simulation, 
         i.	Predict y-hat at several different locations using a confidence interval.
         ii.	Predict the beta coefficients for a linear model using a confidence interval. 
@@ -278,20 +297,27 @@ y <- b0 + b1 * x + eps
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
+set.seed(42) # For sanity
+
 n <- 20
 b0 <- 10
 b1 <- 3
 b2 <- 7
 
-simga <- 2
+sigma <- 2
 
 x1 <- runif(n, 0, 10)
-x2 <- x1 + rnorm(n)
-cor(x1, x2)
+x2_q5 <- x1 + rnorm(n) #x2 is a linear combination of x1 and some number
+
+eps <- rnorm(n, sd = sigma) 
+y <- b0 + b1 * x1 + b2 * x2_q5 + eps
 
 
-eps <- rnorm(n, sd = sigma)
-y <- b0 + b1 * x1 + b2 * x2 + eps
+## Testing for colinearity
+cor(x1, x2_q5) # Showing there is correlation
+## A high kappa indicates trouble
+test_colinearity <- model.matrix(~ x1 + x2_q5)        
+kappa(mm12)                          
 ```
 
 \newpage
