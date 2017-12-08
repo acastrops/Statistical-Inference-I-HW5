@@ -49,43 +49,95 @@ b2 <- 5
 # a, c
 Nonlinear <- function(n, b0, b1, b2){
   # Melissa gave us
-  # x1 <- runif(n, 0, 10)
-  # eps <- 3 * rnorm(n)
+  x1 <- runif(n, 0, 10)
+  eps <- 3 * rnorm(n)
+  var <- var(eps)
   # y <- b0 - b1 * (x1 - 5)^2 + eps
   
   # exponential
   exp.y <- b0 + b1*exp(x1) + eps
   exp.ey <- b0 + b1*exp(x1)
   exp.lm <- lm(exp.y ~ x1)
-  exp.reg.stats <- reg.stats(exp.lm, exp.ey)
+  exp.reg.stats <- reg.stats(exp.lm)
+  exp.reg.tests <- reg.tests(exp.reg.stats[1], exp.reg.stats[2], exp.reg.stats[4], exp.ey, list(b0,b1))
+  output(exp.reg.tests[1], exp.reg.tests[2], exp.reg.tests[3], exp.reg.stats[3], var)
   
   # polynomial
   x2 <- runif(n, 0, 10)
   pol.y <- b0 - b1 * (x1 - 5)^2 + b2*x2 + eps
   pol.ey <- b0 - b1 * (x1 - 5)^2 + b2*x2
   pol.lm <- lm(pol.y ~ x1 + x2)
-  pol.reg.stats <- reg.stats(pol.lm, pol.ey)
+  pol.reg.stats <- reg.stats(pol.lm)
+  pol.reg.tests <- reg.tests(pol.reg.stats[1], pol.reg.stats[2], pol.reg.stats[4], pol.ey, list(b0, b1, b2))
   
   # sinusoidal
   sin.y <-b0 + b1*sin(x1) + eps
   sin.ey <-b0 + b1*sin(x1)
   sin.lm <- lm(sin.y ~ x1)
-  sin.reg.stats <- reg.stats(sin.lm, sin.ey)
-  
+  sin.reg.stats <- reg.stats(sin.lm)
+  sin.reg.tests <- reg.tests(sin.reg.stats[1], sin.reg.stats[2], sin.reg.stats[4], sin.ey, list(b0,b1))
   return()
 }
 
-reg.stats <- function(lm, ey){
+reg.stats <- function(lm){
   yhat <- predict(lm, interval = "confidence")
   confint <- confint(lm)
-  mse <- summary(lm)$sigma^2
-  pvalue <- summary(lm)$coefficients[,4]
+  mse <- mean(residuals(lm)^2)
+  pvalue <- list(rownames(summary(lm)$coefficients), summary(lm)$coefficients[,4])
+
   return(list(yhat, confint, mse, pvalue))
-  
-  # tests
+}
+
+# d
+# tests
+reg.tests <- function(yhat, confint, pvalue, ey, betaslist)  {
+  # ey coverage
+  # create a percentage of EYi's that fall within the confidence interval of Yhat
   yhat.test <- c()
+  # print(yhat)
+  # print(yhat[[1]][,2])
   for (i in 1:length(ey)){
-    yhat.test[i] <- (ey[i] >= yhat[i, 2] & ey[i] <= yhat[i, 3])
+    yhat.test[i] <- (ey[i] >= yhat[[1]][i, 2] & ey[i] <= yhat[[1]][i, 3])
+  }
+  yhat.coverage <- sum(yhat.test, na.rm=TRUE)/length(ey)*100
+  
+  # beta coverage
+  # creates a boolean of if all beta's fall within their confidence intervals
+  beta.test <- c()
+  for (b in 1:length(betaslist)){
+    beta.test[b] <- (betaslist[b] >= confint[[1]][b,1] & betaslist[b] <= confint[[1]][b, 2])
+  }
+  beta.pass <- all(beta.test)
+  
+  # pvalue test
+  # create a list of lists with coefficient name and boolean of if pvalue significant
+  pval.test <- c()
+  for (p in 1:length(pvalue)){
+    pval.test[p] <- list(pvalue[[1]][[1]][p], (pvalue[[1]][[2]][p] <= 0.05))
+  }
+  
+  return(list(yhat.coverage, beta.pass, pval.test))
+}
+
+output <- function(yhat.coverage, beta.pass, pval.test, mse, var){
+  # is beta in confint?
+  print("Betas are within their confidence interval: ")
+  print(beta.pass[[1]])
+  
+  # is EYi in confint for Yhat?
+  print("How often does the EYi fall within the Yhat confidence interval?: ", yhat.coverage, " % of the time")
+  
+  # How close is MSE to sigma^2? Later this will be represented as a histogram for multiple simulations
+  print("MSE is: ", mse, "vs. the variance: ", var)
+  
+  # Did we correctly conclude beta does not equal 0?
+  for (elem in pval.test){
+    if (!elem[2]){
+      print(elem[1], "coefficient was not significant")
+    }
+    else{
+      print(elem[1], "passes")
+    }
   }
 }
 # b
@@ -93,7 +145,9 @@ smallNonlinear <- Nonlinear(20, b0, b1, b2)
 medNonlinear <- Nonlinear(100, b0, b1, b2)
 largeNonlinear <- Nonlinear(5000, b0, b1, b2)
 
-# 
+# TO DO:
+# create output of reg.tests results
+# fix error
 ```
 
 \newpage
