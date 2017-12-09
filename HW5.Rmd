@@ -331,14 +331,94 @@ Nonnormal(n, b0,b1,nonnormal_functions[i],TRUE)
         
 ```{r}
 # Sample code to get started
-n <- 200
-b0 <- 10
-b1 <- 10
+#n <- 200
 
-x <- runif(n, 0, 10)
-eps <- rnorm(n, sd = 0.5 * x^2)
-y <- b0 + b1 * x + eps
 
+# x <- runif(n, 0, 10)
+# eps <- rnorm(n, sd = 0.5 * x^2)
+# y <- b0 + b1 * x + eps
+
+samp.hetero<-c("sqrt", "exp", "poly", "norm")
+
+Hetero <- function(n, b0, b1, func, bool = FALSE){
+  # Melissa gave us
+  b0 <- 10
+  b1 <- 10
+  x1 <- runif(n, 0, 10)
+  #var <- var(eps)
+  # y <- b0 - b1 * (x1 - 5)^2 + eps
+  
+  
+  
+  # exponential
+  if (func == 'exp'){
+    eps <- rnorm(n, sd = exp(x1))
+    var<-var(eps)
+    exp.y <- b0 + b1*(x1) + eps
+    exp.ey <- b0 + b1*(x1)
+    exp.lm <- lm(exp.y ~ x1)
+    exp.reg.stats <- reg.stats(exp.lm)
+    exp.reg.tests <- reg.tests(exp.reg.stats[1], exp.reg.stats[2], exp.reg.stats[4], exp.ey, list(b0,b1))
+    output(exp.reg.tests[1], exp.reg.tests[2], exp.reg.tests[3], exp.reg.stats[3], var, exp.lm, bool)
+  }
+  
+  # sqrt
+  
+  if (func == 'sqrt'){
+    eps <- rnorm(n, sd = 2*sqrt(x1))
+    var<-var(eps)
+    sqrt.y <- b0 + b1*(x1) + eps
+    sqrt.ey <- b0 + b1*(x1)
+    sqrt.lm <- lm(sqrt.y ~ x1)
+    sqrt.reg.stats <- reg.stats(sqrt.lm)
+    sqrt.reg.tests <- reg.tests(sqrt.reg.stats[1], sqrt.reg.stats[2], sqrt.reg.stats[4], sqrt.ey, list(b0,b1))
+    output(sqrt.reg.tests[1], sqrt.reg.tests[2], sqrt.reg.tests[3], sqrt.reg.stats[3], var, sqrt.lm, bool)
+  }
+  
+  #poly
+  
+  if (func == 'poly'){
+    eps <- rnorm(n, sd = 0.5*x1^2)
+    var<-var(eps)
+    poly.y <- b0 + b1*(x1) + eps
+    poly.ey <- b0 + b1*(x1)
+    poly.lm <- lm(poly.y ~ x1)
+    poly.reg.stats <- reg.stats(poly.lm)
+    poly.reg.tests <- reg.tests(poly.reg.stats[1], poly.reg.stats[2], poly.reg.stats[4], poly.ey, list(b0,b1))
+    output(poly.reg.tests[1], poly.reg.tests[2], poly.reg.tests[3], poly.reg.stats[3], var, poly.lm, bool)
+  }
+  
+  #normal
+  
+  if (func == 'norm'){
+    eps <- rnorm(n, sd = 0)
+    var<-var(eps)
+    norm.y <- b0 + b1*(x1) + eps
+    norm.ey <- b0 + b1*(x1)
+    norm.lm <- lm(norm.y ~ x1)
+    norm.reg.stats <- reg.stats(norm.lm)
+    norm.reg.tests <- reg.tests(norm.reg.stats[1], norm.reg.stats[2], norm.reg.stats[4], norm.ey, list(b0,b1))
+    output(norm.reg.tests[1], norm.reg.tests[2], norm.reg.tests[3], norm.reg.stats[3], var, norm.lm, bool)
+  }
+}
+
+size <- c(20,100,5000)
+for (i in 1:length(samp.hetero)){
+  for (j in 1:length(size)){
+    print(paste("Running sample ", samp.hetero[i]," with size ",size[j]))
+    Hetero(size[j], b0,b1,samp.hetero[i])
+  }
+}
+```
+
+
+
+Part e)
+
+```{r}
+n <- sample(20:5000, 1)
+i <- sample(1:2, 1)
+Hetero(n, b0,b1,samp.hetero[i],TRUE)
 ```
 
 \newpage
