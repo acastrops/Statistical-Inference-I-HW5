@@ -49,6 +49,18 @@ b0 <- 10
 b1 <- 2
 b2 <- 5
 
+# creates information for a normal model to be used in every question part e
+normal <- function(n, b0, b1, bool){
+  x1 <- runif(n, 0, 10)
+  norm.eps <- 3 * rnorm(n)
+  norm.var <- var(norm.eps)
+  norm.y <-b0 + b1*(x1) + norm.eps
+  norm.ey <-b0 + b1*(x1)
+  norm.lm <- lm(norm.y ~ x1)
+  testing(norm.lm, norm.ey, list(b0,b1), norm.var, bool)
+}
+
+
 # a, c
 Nonlinear <- function(n, b0, b1, b2, func, bool = FALSE){
 
@@ -57,28 +69,24 @@ Nonlinear <- function(n, b0, b1, b2, func, bool = FALSE){
   eps <- 3 * rnorm(n)
   var <- var(eps)
   # y <- b0 - b1 * (x1 - 5)^2 + eps
-  
+  x2 <- runif(n, 0, 10)
+  samp <- c("sinusoidal", "polynomial", "exponential", "normal")
   
   # exponential
   if (func == "exponential"){
     exp.y <- b0 + b1*exp(x1) + eps
     exp.ey <- b0 + b1*exp(x1)
     exp.lm <- lm(exp.y ~ x1)
-    exp.reg.stats <- reg.stats(exp.lm)
-    exp.reg.tests <- reg.tests(exp.reg.stats[1], exp.reg.stats[2], exp.reg.stats[4], exp.ey, list(b0,b1))
-    output(exp.reg.tests[1], exp.reg.tests[2], exp.reg.tests[3], exp.reg.stats[3], var,exp.lm, bool)
+    testing(exp.lm, exp.ey, list(b0,b1), var, bool)
   }
   
   
   # polynomial
   if(func == "polynomial"){
-    x2 <- runif(n, 0, 10)
     pol.y <- b0 - b1 * (x1 - 5)^2 + b2*x2 + eps
     pol.ey <- b0 - b1 * (x1 - 5)^2 + b2*x2
     pol.lm <- lm(pol.y ~ x1 + x2)
-    pol.reg.stats <- reg.stats(pol.lm)
-    pol.reg.tests <- reg.tests(pol.reg.stats[1], pol.reg.stats[2], pol.reg.stats[4], pol.ey, list(b0, b1, b2))
-    output(pol.reg.tests[1], pol.reg.tests[2], pol.reg.tests[3], pol.reg.stats[3], var, pol.lm, bool)
+    testing(pol.lm, pol.ey, list(b0,b1, b2), var, bool)
   }
   
   # sinusoidal
@@ -86,25 +94,23 @@ Nonlinear <- function(n, b0, b1, b2, func, bool = FALSE){
     sin.y <-b0 + b1*sin(x1) + eps
     sin.ey <-b0 + b1*sin(x1)
     sin.lm <- lm(sin.y ~ x1)
-    sin.reg.stats <- reg.stats(sin.lm)
-    sin.reg.tests <- reg.tests(sin.reg.stats[1], sin.reg.stats[2], sin.reg.stats[4], sin.ey, list(b0,b1))
-    output(sin.reg.tests[1], sin.reg.tests[2], sin.reg.tests[3], sin.reg.stats[3], var, sin.lm, bool)
+    testing(sin.lm, sin.ey, list(b0,b1), var, bool)
   }
   
+  # normal
   if(func == "normal"){
-    norm.y <-b0 + b1*(x1) + eps
-    norm.ey <-b0 + b1*(x1)
-    norm.lm <- lm(norm.y ~ x1)
-    norm.reg.stats <- reg.stats(norm.lm)
-    norm.reg.tests <- reg.tests(norm.reg.stats[1], norm.reg.stats[2], norm.reg.stats[4], norm.ey, list(b0,b1))
-    output(norm.reg.tests[1], norm.reg.tests[2], norm.reg.tests[3], norm.reg.stats[3], var, norm.lm, bool)
+    normal(n, b0, b1, bool)
   }
-  
-  return()
 }
 
-samp <- c("sinusoidal", "polynomial", "exponential", "normal")
+# a function to call the other methods
+testing <- function(lm, ey, betaslist, var, bool){
+  stats <- reg.stats(lm)
+  tests <- reg.tests(stats[1], stats[2], stats[4], ey, betaslist)
+  output(tests[1], tests[2], tests[3], stats[3], var, lm, bool)
+}
 
+# calculates the yhat, confint for the betas, the mse, grabs the p-values for the coefficients and returns
 reg.stats <- function(lm){
   yhat <- predict(lm, interval = "confidence")
   confint <- confint(lm)
@@ -114,13 +120,11 @@ reg.stats <- function(lm){
 }
 
 # d
-# tests
+# creates the tests of EYi and beta coverage in the confidence intervals and if we corrected concluded b != 0
 reg.tests <- function(yhat, confint, pvalue, ey, betaslist)  {
-  # ey coverage
+
   # create a percentage of EYi's that fall within the confidence interval of Yhat
   yhat.test <- vector(mode="logical", length = length(ey))
-  # print(yhat)
-  # print(yhat[[1]][,2])
   for (i in 1:length(ey)){
     yhat.test[i] <- (ey[i] >= yhat[[1]][i, 2] & ey[i] <= yhat[[1]][i, 3])
   }
@@ -135,9 +139,8 @@ reg.tests <- function(yhat, confint, pvalue, ey, betaslist)  {
   beta.pass <- all(beta.test)
   
   # pvalue test
-  # create a list of lists with coefficient name and boolean of if pvalue significant
+  # create a data frame with coefficient name and boolean of if pvalue significant
   coefficient.df <- data.frame(matrix(ncol = 2, nrow = length(betaslist)))
-  
   for (p in 1:length(pvalue[[1]])){
     coefficient.df[p, 1] <-names(pvalue[[1]])[p]
     coefficient.df[p, 2] <- (pvalue[[1]][p] <= 0.05)
@@ -145,6 +148,7 @@ reg.tests <- function(yhat, confint, pvalue, ey, betaslist)  {
   return(list(yhat.coverage, beta.pass, coefficient.df))
 }
 
+# puts all the information together into an output
 output <- function(yhat.coverage, beta.pass, coefficient.df, mse, var, lm, bool){
   # is beta in confint?
   print(paste("Betas are within their confidence interval: ", beta.pass[[1]]))
@@ -170,6 +174,7 @@ output <- function(yhat.coverage, beta.pass, coefficient.df, mse, var, lm, bool)
   }
 }
 # b
+# get information about each case
 size <- c(20,100,5000)
 for (i in 1:length(samp)){
   for (j in 1:length(size)){
@@ -254,10 +259,7 @@ After testing ourselves 25 times we found that we were accurate 22 times out of 
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
-# Sample code to get started
-
-
-nonnormal_functions <- c("poisson","gamma")
+nonnormal_functions <- c("poisson","gamma", "normal")
 
 Nonnormal <- function(n, b0, b1, func, bool = FALSE){
   b0 <- 10
@@ -266,19 +268,15 @@ Nonnormal <- function(n, b0, b1, func, bool = FALSE){
   eps_beta <- 1/4 #Scale
   
   x <- runif(n, 0, 10)
-  
-  poisson <- (func)
 
   # poisson
   if (func == "poisson"){
-    eps <- rpois(n, lambda = 5)
+    eps <- rpois(n, lambda = 1)
     var <- var(eps)
     pois.y <- b0 - b1*(x) + eps
     pois.ey <- b0 - b1*(x)
     pois.lm <- lm(pois.y ~ x)
-    pois.reg.stats <- reg.stats(pois.lm)
-    pois.reg.tests <- reg.tests(pois.reg.stats[1], pois.reg.stats[2], pois.reg.stats[4], pois.ey, list(b0,b1))
-    output(pois.reg.tests[1], pois.reg.tests[2], pois.reg.tests[3], pois.reg.stats[3], var,pois.lm, bool)
+    testing(pois.lm, pois.ey, list(b0,b1), var, bool)
   }
   
   if(func == "gamma"){
@@ -287,9 +285,12 @@ Nonnormal <- function(n, b0, b1, func, bool = FALSE){
     gamma.y <- b0 - b1*(x) + eps
     gamma.ey <- b0 - b1*(x)
     gamma.lm <- lm(gamma.y ~ x)
-    gamma.reg.stats <- reg.stats(gamma.lm)
-    gamma.reg.tests <- reg.tests(gamma.reg.stats[1], gamma.reg.stats[2], gamma.reg.stats[4], gamma.ey, list(b0,b1))
-    output(gamma.reg.tests[1], gamma.reg.tests[2], gamma.reg.tests[3], gamma.reg.stats[3], var,gamma.lm, bool)
+    testing(gamma.lm, gamma.ey, list(b0,b1), var, bool)
+  }
+  
+  # normal
+  if(func == "normal"){
+    normal(n, b0, b1, bool)
   }
   
 }
@@ -302,16 +303,14 @@ for (i in 1:length(nonnormal_functions)){
   }
 }
 ```
-
+For poisson, EYi falling within the Yhat confidence interval depends on the value set for lambda
 part e
 ```{r}
 # choose random sample size and random function
 # Repeat to your hearts desire and test yourself
 n <- sample(20:5000, 1)
-i <- sample(1:2, 1)
+i <- sample(1:3, 1)
 Nonnormal(n, b0,b1,nonnormal_functions[i],TRUE)
-
-# to-do add normal case!!
 
 ```
 \newpage
@@ -359,31 +358,64 @@ y <- b0 + b1 * x + eps
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
-# Sample code to get started
-n <- 200
-b0 <- 10
-b1 <- 10
-rho <- 0.9
-sigma <- 2
+correlated_error_options <- c("arima","rho", "normal")
 
-x <- runif(n, 0, 10)
+correlated_error <- function(n, func, bool = FALSE){
+  # Sample code to get started
+  b0 <- 10
+  b1 <- 10
+  rho <- 0.9
+  sigma <- 2
+  
+  x <- runif(n, 0, 10)
 
-eps <- arima.sim(model = list(ar = rho), n = n)
-
-y <- b0 + b1 * x + eps
-
-# OR...
-
-eps <- rep(0, n)
-e.ind <- rnorm(n, mean = 0, sd = (sigma / sqrt(1-rho^2)))
-eps[1] <- e.ind[1]
-for (i in 2:n) {
-  eps[i] <- rho * eps[i-1] + e.ind[i]
+  # arima.sim
+  if (func == "arima"){
+    arima.eps <- arima.sim(model = list(ar = rho), n = n)
+    arima.var <- var(arima.eps)
+    arima.y <- b0 + b1 * x + arima.eps
+    arima.ey <- b0 - b1*(x)
+    arima.lm <- lm(arima.y ~ x)
+    testing(arima.lm, arima.ey, list(b0,b1), arima.var, bool)
+  }
+  
+  if(func == "rho"){
+    rho.eps <- rep(0, n)
+    e.ind <- rnorm(n, mean = 0, sd = (sigma / sqrt(1-rho^2)))
+    rho.eps[1] <- e.ind[1]
+    for (i in 2:n) {
+      rho.eps[i] <- rho * rho.eps[i-1] + e.ind[i]
+    }
+    
+    rho.y <- b0 + b1 * x + rho.eps
+    rho.var <- var(rho.eps)
+    rho.ey <- b0 - b1*(x)
+    rho.lm <- lm(rho.y ~ x)
+    testing(rho.lm, rho.ey, list(b0,b1), rho.var, bool)
+  }
+  
+  # normal
+  if(func == "normal"){
+    normal(n, b0, b1, bool)
+  }
 }
 
-y <- b0 + b1 * x + eps
+for (i in 1:length(correlated_error_options)){
+  for (j in 1:length(size)){
+    print(paste("Running sample ", correlated_error_options[i]," with size ",size[j]))
+    correlated_error(size[j], correlated_error_options[i])
+  }
+}
 ```
 
+```{r}
+# choose random sample size and random function
+# Repeat to your hearts desire and test yourself
+n <- sample(20:5000, 1)
+i <- sample(1:3, 1)
+correlated_error(n, correlated_error_options[i], TRUE)
+
+```
 \newpage
         
 5. Multicollinearity
