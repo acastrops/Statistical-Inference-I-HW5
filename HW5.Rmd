@@ -2,9 +2,10 @@
 title: "Statistical Inference 1 - Homework 5"
 author: "Adriana Souza, Lilly Raud, Kevin Hunt, Saad Usmani, Mike McCormack"
 date: "11/22/2017"
-output: 
-  pdf_document: 
-    latex_engine: lualatex
+output:
+  html_document: default
+  #pdf_document:
+   # latex_engine: lualatex
 ---
 
 ```{r setup, include=FALSE}
@@ -176,6 +177,7 @@ output <- function(yhat.coverage, beta.pass, coefficient.df, mse, var, lm, bool)
 # b
 # get information about each case
 size <- c(20,100,5000)
+samp <- c("sinusoidal", "polynomial", "exponential", "normal")
 for (i in 1:length(samp)){
   for (j in 1:length(size)){
     print(paste("Running sample ", samp[i]," with size ",size[j]))
@@ -183,55 +185,67 @@ for (i in 1:length(samp)){
   }
 }
 ```
-Exponential
-  Small
-    - Betas do not fall with in the confidence interval
-    - Questionable EYi prediction of (70%)
-    - MSE vs variance has a huge difference
+Effect of nonlinearity on each simulation.  
+
+Sinusoidal  
+    Small  
+    - Betas do not fall with in the confidence interval  
+    - Questionable EYi prediction of (70%)  
+    - Discrepency between MSE and variance is small.  
+    - The coefficient for x1 is not significant.
   
-  Medium
-    - Betas do not fall with in the confidence interval
-    - Horrible EYi prediction of (18%)
-    - MSE vs variance has an even larger difference than the small exponential function
+  Medium  
+    - Betas do not fall with in the confidence interval  
+    - Poo EYi prediction of (35%)  
+    - Discrepency between MSE and variance is very small.  
+    - The coefficient for x1 is not significant.
+  
+  Large  
+    - Betas do not fall with in the confidence interval  
+    - Horrible EYi prediction of (5.88%)  
+    - Discrepency between MSE and variance is small.  
+    - The coefficient for x1 is not significant.
+  
+Polynomial  
+    Small  
+    - Betas do fall with in the confidence interval  
+    - Poor EYi prediction of (45%)  
+    - Discrepency between MSE and variance.  Not has large as the exponential difference for the small sample size.  
+    - The coefficient for the intercept and x1 is not significant
+  
+  Medium  
+    - Betas do not fall with in the confidence interval  
+    - Bad EYi prediction of (21%)  
+    - Discrepency between MSE and variance.  Not has large as the exponential difference for the medium sample size.  
+    - The coefficient for x1 is not significant
+  
+  Large  
+    - Betas do not fall with in the confidence interval  
+    - Horrid EYi prediction of (2.72%)  
+    - Discrepency between MSE and variance.  Not has large as the exponential difference for the large sample size.  
+    - The coefficient for x1 is not siginficant
+  
+Exponential  
+    Small  
+      - Betas do not fall with in the confidence interval  
+      - Questionable EYi prediction of (50%)  
+      - MSE vs variance has a huge difference  
+      - All coefficients are significant
+  
+  Medium  
+      - Betas do not fall with in the confidence interval  
+      - Horrible EYi prediction of (13%)  
+      - MSE vs variance has an even larger difference than the small exponential function  
+      - All coefficients are significant  
     
-  Large
-  - Betas do not fall with in the confidence interval
-  - Atrocious EYi prediction of (2.48%)
-  - The discrepency between MSE vs variance is the worst out of all the exponential functions
-  
-Polynomial
-  Small
-  - Betas do not fall with in the confidence interval
-  - Questionable EYi prediction of (45%)
-  - Discrepency between MSE and variance.  Not has large as the exponential difference for the small sample size.
-  
-  Medium
-  - Betas do not fall with in the confidence interval
-  - Even worse EYi prediction of (21%)
-  - iscrepency between MSE and variance.  Not has large as the exponential difference for the medium sample size.
-  
-  Large
-  - Betas do not fall with in the confidence interval
-  - Horrid EYi prediction of (2.72%)
-  - discrepency between MSE and variance.  Not has large as the exponential difference for the large sample size.
-  
-Sinusoidal
-  Small
-  - Betas do not fall with in the confidence interval
-  - Questionable EYi prediction of (70%)
-  - Discrepency between MSE and variance is small.
-  
-  Medium
-  - Betas do not fall with in the confidence interval
-  - Bad EYi prediction of (45%)
-  - Discrepency between MSE and variance is very small.
-  
-  Large
-  - Betas do not fall with in the confidence interval
-  - Horrible EYi prediction of (5.88%)
-  - Discrepency between MSE and variance is small.
+  Large  
+    - Betas do not fall with in the confidence interval  
+    - Atrocious EYi prediction of (2.78%)  
+    - The discrepency between MSE vs variance is the worst out of all the exponential functions  
+    - All coefficients are significant.
   
 ```{r}
+set.seed(4)
 # choose random sample size and random function
 # Repeat to your hearts desire and test yourself
 n <- sample(20:5000, 1)
@@ -240,7 +254,10 @@ Nonlinear(n, samp[i], TRUE)
 
 ```
 
-After testing ourselves 25 times we found that we were accurate 22 times out of 25.  Resulting in 88% accuracy for testing our groups
+  This seems to be an example of a Large Sinusoidal relationship.  This is determined by comparing the diagnostics of this simulation to the diagnostics that we calculated.  Here we can see that x1 coefficient is not significant and EYi falls within the Yhat confidence interval about only 8% of the time.  Comparing this to our other simulations, we see that the diagnostics here most closely resemble the diagnostics of a large sinusoidal simulation.
+
+
+
 
 \newpage
 
@@ -259,6 +276,7 @@ After testing ourselves 25 times we found that we were accurate 22 times out of 
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
+set.seed(2)
 nonnormal_functions <- c("poisson","gamma", "normal")
 
 Nonnormal <- function(n, func, bool = FALSE){
@@ -303,16 +321,59 @@ for (i in 1:length(nonnormal_functions)){
   }
 }
 ```
-For poisson, EYi falling within the Yhat confidence interval depends on the value set for lambda
-part e
+Effect of non-normal errors on each simulation.  
+
+Poisson Distribution  
+    Small 
+      - Betas are not within the confidence interval  
+      - Low EYi predition of (25%)  
+      - MSE and variance are very close together  
+      - All coefficients are significant.   
+
+  Medium  
+    - Betas are not within the confidence interval  
+    - Worst possible EYi predictions (0%)  
+    - MSE and variance are very close together  
+    - All coefficients are significant.
+    
+  Large  
+    - Betas are not within the confidence interval  
+    - Worst possible EYi predictions (0%)  
+    - MSE and variance are almost identical  
+    - All coefficients are significant
+    
+Gamma Distribution  
+    Small  
+      - Betas are not within the confidence interval  
+      - Perfect EYi predictions (100%)  
+      - MSE and variance are very close together  
+      - All coefficients are significant  
+      
+  Medium
+    - Betas are not within the confidence interval 
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are very close together  
+    - All coefficients are significant  
+    
+  Large  
+    - Betas are not within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are almost identical  
+    - All coefficients are significant  
 ```{r}
+set.seed(6)
 # choose random sample size and random function
-# Repeat to your hearts desire and test yourself
+# Repeat to your hearts desire and test yourself (Remove seed to get different values.  Seed is set so we can show the model that we're interpreting)
 n <- sample(20:5000, 1)
 i <- sample(1:3, 1)
 Nonnormal(n,nonnormal_functions[i],TRUE)
 
 ```
+
+
+  This seems to be an example of a Large Normal distribution.  This is determined by comparing the diagnostics of this simulation to the diagnostics that we calculated.  Here we can see that all coefficients are significant and EYi falls within the Yhat confidence interval 100% of the time.  Comparing this to our other simulations and looking at the Q-Q plot for this model, we see that the diagnostics here most closely resemble the diagnostics of a large normal distribution
+
+
 \newpage
         
 3. Heterogeneous Variances
@@ -330,6 +391,7 @@ Nonnormal(n,nonnormal_functions[i],TRUE)
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
         
 ```{r}
+set.seed(5)
 samp.hetero<-c("sqrt", "exp", "poly", "norm")
 
 Hetero <- function(n, func, bool = FALSE){
@@ -382,16 +444,75 @@ for (i in 1:length(samp.hetero)){
   }
 }
 ```
-
-
-
+Effect of Heterogeneous Variances  
+  
+Square Root  
+  Small  
+    - Betas are within the confidence interval   
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are close together  
+    - All coefficients are significant  
+      
+  Medium  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are very close together  
+    - All coefficients are significant
+    
+  Large  
+    - Betas are within the confidence interval 
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are nearly identical  
+    - All coefficients are significant  
+    
+Exponential  
+  Small 
+  - Betas are not within the confidence interval  
+  - Questionably Poor EYi prediction of (40%)  
+  - MSE and variance are both very large numbers and far apart  
+  - The intercept is not significant  
+    
+  Medium  
+    - Betas are within the confidence interval
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are both very large numbers but are fairly close together  
+    - The intercept  and the x1  are not significant  
+    
+  Large  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE and variance are both very large numbers but are almost identical  
+    - The intercept  and the x1  are not significant  
+  
+Polynomial  
+  Small  
+  - Betas are within the confidence interval  
+  - Questionable EYi prediction of (65%)  
+  - MSE (503) and variance (529) are both fairly large numbers not very far apart
+  - The intercept is not significant  
+  
+  Medium  
+  - Betas are within the confidence interval  
+  - Perfect EYi predictions (100%)  
+  - MSE (348) and variance (351) are both fairly large numbers and are very close
+  - All coefficients are significant
+  
+  
+  Large  
+  - Betas are within the confidence interval  
+  - Perfect EYi predictions (100%)  
+  - MSE(503) and variance (503) are both fairly large numbers and almost identical  
+  - All coefficients are significant.  
+  
 Part e)
 
 ```{r}
+set.seed(7)
 n <- sample(20:5000, 1)
 i <- sample(1:4, 1)
 Hetero(n,samp.hetero[i],TRUE)
 ```
+    This seems to be an example of a Large exponential heterogenous variance simulation.  This is determined by comparing the diagnostics of this simulation to the diagnostics that we calculated.  Here we can see that the EYi falls within the Yhat confidence interval 100% of the time and the MSE and variance are both very large but also almost identical.  Comparing this to our other simulations we see that the diagnostics here most closely resemble the diagnostics of a exponential heterogenous variance simulation.
 
 \newpage
 
@@ -410,6 +531,7 @@ Hetero(n,samp.hetero[i],TRUE)
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
+set.seed(6)
 correlated_error_options <- c("arima","rho", "normal")
 
 correlated_error <- function(n, func, bool = FALSE){
@@ -459,15 +581,57 @@ for (i in 1:length(correlated_error_options)){
   }
 }
 ```
+Effects of Correlated Error options  
+Arima  
+  Small  
+    - Betas are within the confidence interval  
+    - Worst possible EYi predictions (0%)  
+    - MSE (7.6) and Variance (8.16) are close together
+    - All coefficients are significant  
+    
+  Medium  
+    - Betas are within the confidence interval  
+    - Worst possible EYi predictions (0%)  
+    - MSE and variance are very close together
+    - All coefficients are significant
+  
+  Large  
+    - Betas are within the confidence interval  
+    - Worst possible EYi predictions (0%)  
+    - MSE and variance are almost identical
+    - All coefficients are significant
+Rho  
+  Small 
+    - Betas are within the confidence interval  
+    - Bad EYi predictions (5%)  
+    - MSE(51) and variance(52) are close together  
+    - All coefficients are significant  
+  
+  Medium  
+    - Betas are not within the confidence interval  
+    - Horrible EYi predictions (5%)  
+    - MSE(45.8) and variance(45.7) are very close together  
+    - The intercept is not significant  
+  
+  Large  
+    - Betas are within the confidence interval  
+    - Atrocious EYi predictions (0.36%)  
+    - MSE and variance are nearly identical  
+    - All coefficients are significant  
 
 ```{r}
+set.seed(5)
 # choose random sample size and random function
 # Repeat to your hearts desire and test yourself
 n <- sample(20:5000, 1)
 i <- sample(1:3, 1)
+print(n)
+print(i)
 correlated_error(n, correlated_error_options[i], TRUE)
 
 ```
+    This seems to be an example of a Large Normal simulation.  This is determined by comparing the diagnostics of this simulation to the diagnostics that we calculated.  The MSE and variance are but also almost identical.  We can tell n is large by looking at the graphs, and by examining the qq plot we can see that it follows that of a normal distribution.  Comparing this to our other simulations we see that the diagnostics here most closely resemble the diagnostics of a large normal distribution.
+
 \newpage
         
 5. Multicollinearity
@@ -485,6 +649,7 @@ correlated_error(n, correlated_error_options[i], TRUE)
         iii. Based on the diagnostics, predict whether the problem areas you mentioned in part d will be affected or not. (Note: You are not predicting whether the assumptions are violated-- just whether they are violated to such an extent that your ability to use the model is compromised)
 
 ```{r}
+set.seed(5)
 multicollinearity_options <- c("linear combination","multiplier", "normal")
 
 multicollinearity <- function(n, func, bool = FALSE){
@@ -494,9 +659,9 @@ multicollinearity <- function(n, func, bool = FALSE){
   b2 <- 7
   sigma <- 2
   
-  x <- runif(n, 0, 10)
-  x2_adding <- x + rnorm(n) #x2 is a linear combination of x1 and some number
-  x2_mult <-x*rnorm(n)
+  x1 <- runif(n, 0, 10)
+  x2_adding <- x1 + rnorm(n) #x2 is a linear combination of x1 and some number
+  x2_mult <-x1*rnorm(n)
   
   # linear combination
   if (func == "linear combination"){
@@ -504,8 +669,8 @@ multicollinearity <- function(n, func, bool = FALSE){
     lc.y <- b0 + b1 * x1 + b2 * x2_adding + lc.eps
     lc.ey <- b0 + b1 * x1 + b2 * x2_adding
     lc.var <- var(lc.eps)
-    lc.lm <- lm(lc.y ~ x + x2_adding)
-    cor(x, x2_adding)
+    lc.lm <- lm(lc.y ~ x1 + x2_adding)
+    cor(x1, x2_adding)
     testing(lc.lm, lc.ey, list(b0,b1, b2), lc.var, bool)
     
   }
@@ -516,9 +681,9 @@ multicollinearity <- function(n, func, bool = FALSE){
     mult.y <- b0 + b1 * x1 + b2 * x2_mult + mult.eps
     mult.ey <- b0 + b1 * x1 + b2 * x2_mult
     mult.var <- var(mult.eps)
-    mult.lm <- lm(mult.y ~ x + x2_mult)
+    mult.lm <- lm(mult.y ~ x1 + x2_mult)
     testing(mult.lm, mult.ey, list(b0,b1, b2), mult.var, bool)
-    cor(x, x2_mult)
+    cor(x1, x2_mult)
   }
   
   # normal
@@ -534,8 +699,47 @@ for (i in 1:length(multicollinearity_options)){
   }
 }
 ```
-
+Effects of Multicolinearity  
+Linear combination  
+  Small  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE (857) and variance(2.9) are extemely far apart  
+    - All coefficient are significant
+    
+  Medium  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE (4351) and variance(4.6) are even further apart compared to the small model  
+    - All coefficient are significant
+  
+  Large 
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - MSE(250399) and variance (4) are the furthest apart
+    - All coefficient are significant
+  
+Multiplier  
+  Small  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - Huge difference between MSE(23988) and variance (7.19)  
+    - All coefficients are significant
+  
+  Medium  
+    - Betas are within the confidence interval  
+    - Perfect EYi predictions (100%)  
+    - Even larger difference between MSE(224844) and variance (3.7)than in the smaller simulation
+    - All coefficients are significant
+  
+  Large  
+    - Betas are within the confidence interval  
+    - Good EYi predictions of (79.86%)  
+    - Largest difference between MSE (8271184) and variance (4)
+    - All coefficients are significant
+  
 ```{r}
+set.seed(5)
 # choose random sample size and random function
 # Repeat to your hearts desire and test yourself
 n <- sample(20:5000, 1)
@@ -543,26 +747,17 @@ i <- sample(1:3, 1)
 multicollinearity(n, multicollinearity_options[i], TRUE)
 
 ```
-
+  This seems to be an example of a Large Normal simulation.  This is determined by comparing the diagnostics of this simulation to the diagnostics that we calculated.  The MSE and variance are but also almost identical.  We can tell n is large by looking at the graphs, and by examining the qq plot we can see that it follows that of a normal distribution.  Comparing this to our other simulations we see that the diagnostics here most closely resemble the diagnostics of a large normal distribution.
 \newpage
 
 6. Put it all together: Combine the code from the previous 5 parts. Have R randomly choose whether to generate data that violates one (or more) of the assumptions, or whether all the assumptions are valid. Show appropriate diagnostics and test yourself to see if you can predict whether there are problem areas or not. Repeat the simulation several times and record your accuracy at detecting the different problem areas.
-
-From Melissa. Might want to add if we are having a hard time determining if a sample is correlated:
-```{r}
-## Testing for colinearity
-cor(x1, x2_q5) # Showing there is correlation
-## A high kappa indicates trouble
-test_colinearity <- model.matrix(~ x1 + x2_q5)        
-kappa(mm12)                          
-```
 
 ```{r}
 # choose random sample size and random function
 # Repeat to your hearts desire and test yourself
 n <- sample(20:5000, 1)
 violationslist <- c("Nonlinear", "Nonnormal", "Hetero", "correlated errors", "multicollinearity")
-v <- sample(1:5, 1)
+v <- sample(1, 1)
 violation <- violationslist[v]
 
 if (violation == "Nonlinear"){
@@ -589,5 +784,10 @@ if (violation =="multicollinearity"){
   i <- sample(1:3, 1)
   multicollinearity(n, multicollinearity_options[i], TRUE)
 }
+print(v)
+print(n)
 ```
-
+ 
+  It is easy to tell the size of the data by reffering to the plots.  The QQ plot is very helpful for identifying if the data follows a normal distribution or not.  We noticed that after some time our guesses improved, it is still hard to tell the difference between the 5 different options.  However it is clear to tell whether or not a simulation is normal.  Due to the unique shape that Nonlinear simulations have on the Residuals vs Leverage graph, it was easy for us to identify these models.
+  
+Accuracy of predictions: 28/50 
